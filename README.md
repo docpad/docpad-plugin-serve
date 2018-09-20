@@ -46,7 +46,7 @@ Once installed, you can customise the following plugin configuration options:
 - `listenOptions` forwarded to [server.listen](https://nodejs.org/dist/latest-v8.x/docs/api/http.html#http_server_listen)
     - `port` is the [hostenv](https://github.com/bevry/hostenv) PORT, otherwise 9778
     - `host` is the [hostenv](https://github.com/bevry/hostenv) HOSTNAME, otherwise null
-- `serveOptions` forwarded to [server-handler](https://github.com/zeit/serve-handler#options), by default:
+- `serveOptions` forwarded to [serve-handler](https://github.com/zeit/serve-handler#options), by default:
     - `public` is docpad outPath
 
 
