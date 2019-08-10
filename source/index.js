@@ -82,8 +82,8 @@ class ServePlugin extends BasePlugin {
 	destroyServer (next) {
 		if (this.server) {
 			this.docpad.log('info', 'Shutting down the server...')
-			this.server.off('error', this.serverError)
-			this.server.off('clientError', this.serverClientError)
+			this.server.removeListener('error', this.serverError)
+			this.server.removeListener('clientError', this.serverClientError)
 			this.server.close((...args) => {
 				this.docpad.log('info', '...shutdown down the server')
 				next(...args)
