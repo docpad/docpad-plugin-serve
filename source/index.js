@@ -9,27 +9,27 @@ const hostenv = require('hostenv')
 
 // Define plugin
 class ServePlugin extends BasePlugin {
-	get name () {
+	get name() {
 		return 'serve'
 	}
 
-	get initialConfig () {
+	get initialConfig() {
 		return {
 			listenOptions: {
 				port: hostenv.PORT || 9778,
-				host: hostenv.HOSTNAME || null
+				host: hostenv.HOSTNAME || null,
 			},
-			serveOptions: {}
+			serveOptions: {},
 		}
 	}
 
-	constructor (...args) {
+	constructor(...args) {
 		super(...args)
 		this.serverClientError = this.serverClientError.bind(this)
 		this.serverError = this.serverError.bind(this)
 	}
 
-	runAfter (opts, next) {
+	runAfter(opts, next) {
 		// Add the server if the action is run
 		this.createServer(next)
 
@@ -37,23 +37,29 @@ class ServePlugin extends BasePlugin {
 		return this
 	}
 
-	serverClientError (err) {
+	serverClientError(err) {
 		this.docpad.warn(err)
 		return this
 	}
 
-	serverError (err) {
+	serverError(err) {
 		this.docpad.error(err)
 		return this
 	}
 
-	createServer (next) {
+	createServer(next) {
 		const config = this.getConfig()
 		const { listenOptions } = config
-		const serveOptions = Object.assign({
-			public: this.docpad.getConfig().outPath
-				.replace(process.cwd(), '').trim('/').trim('\\') // workaround until https://github.com/zeit/serve-handler/pull/50 merges
-		}, config.serveOptions || {})
+		const serveOptions = Object.assign(
+			{
+				public: this.docpad
+					.getConfig()
+					.outPath.replace(process.cwd(), '')
+					.trim('/')
+					.trim('\\'), // workaround until https://github.com/zeit/serve-handler/pull/50 merges
+			},
+			config.serveOptions || {}
+		)
 
 		if (this.server) {
 			this.destroyServer(function (err) {
@@ -79,7 +85,7 @@ class ServePlugin extends BasePlugin {
 		return this
 	}
 
-	destroyServer (next) {
+	destroyServer(next) {
 		if (this.server) {
 			this.docpad.log('info', 'Shutting down the server...')
 			this.server.removeListener('error', this.serverError)
@@ -89,15 +95,14 @@ class ServePlugin extends BasePlugin {
 				next(...args)
 			})
 			this.server = null
-		}
-		else {
+		} else {
 			next()
 		}
 
 		return this
 	}
 
-	docpadDestroy (opts, next) {
+	docpadDestroy(opts, next) {
 		this.destroyServer(next)
 		return this
 	}

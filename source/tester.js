@@ -3,7 +3,7 @@
 const PluginTester = require('docpad-plugintester')
 
 class ServeTester extends PluginTester {
-	testCustom () {
+	testCustom() {
 		this.suite('serve', function (suite, test) {
 			// @todo make this work
 		})
