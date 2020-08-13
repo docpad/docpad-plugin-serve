@@ -1,5 +1,16 @@
 # History
 
+## v2.2.0 2020 August 13
+
+-   For simplicity's sake:
+    -   port and hostname are now determined via the function opts, otherwise the plugin config, otherwise the docpad config, otherwise the environment config
+        -   this re-enables common port configurations, such as used by `docpad-plugintester`
+    -   server is now bounded on `docpadReady` instead of `runAfter`
+        -   this makes writing custom testers that depend on the server plugin easier
+    -   `url`, `port`, `host`, and `address` are written to the plugin instance
+        -   this makes testing serves URLs easier as one can do `docpad.getPlugin('serve').port`
+-   Updated dependencies, [base files](https://github.com/bevry/base), and [editions](https://editions.bevry.me) using [boundation](https://github.com/bevry/boundation)
+
 ## v2.1.0 2020 August 6
 
 -   Updated dependencies, [base files](https://github.com/bevry/base), and [editions](https://editions.bevry.me) using [boundation](https://github.com/bevry/boundation)

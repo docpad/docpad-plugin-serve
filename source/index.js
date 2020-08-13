@@ -1,3 +1,4 @@
+// @ts-nocheck
 /* eslint class-methods-use-this:0 */
 'use strict'
 
@@ -15,96 +16,92 @@ class ServePlugin extends BasePlugin {
 
 	get initialConfig() {
 		return {
-			listenOptions: {
-				port: hostenv.PORT || 9778,
-				host: hostenv.HOSTNAME || null,
-			},
+			listenOptions: {},
 			serveOptions: {},
 		}
 	}
 
-	constructor(...args) {
-		super(...args)
-		this.serverClientError = this.serverClientError.bind(this)
-		this.serverError = this.serverError.bind(this)
+	// Create the server
+	docpadReady(opts, next) {
+		this.createServer(opts, next)
 	}
-
-	runAfter(opts, next) {
-		// Add the server if the action is run
-		this.createServer(next)
-
-		// Chain
-		return this
-	}
-
-	serverClientError(err) {
-		this.docpad.warn(err)
-		return this
-	}
-
-	serverError(err) {
-		this.docpad.error(err)
-		return this
-	}
-
-	createServer(next) {
+	createServer(opts, next) {
+		// prepare
+		const me = this
 		const config = this.getConfig()
-		const { listenOptions } = config
-		const serveOptions = Object.assign(
-			{
-				public: this.docpad
-					.getConfig()
-					.outPath.replace(process.cwd(), '')
-					.trim('/')
-					.trim('\\'), // workaround until https://github.com/zeit/serve-handler/pull/50 merges
-			},
-			config.serveOptions || {}
-		)
+		const { docpad } = this
+		const docpadConfig = docpad.getConfig()
 
 		if (this.server) {
 			this.destroyServer(function (err) {
-				if (err) next(err)
-				this.createServer(next)
+				if (err) return next(err)
+				this.createServer(opts, next)
 			})
 			return this
 		}
 
-		this.docpad.log('info', 'Starting the server...')
+		// start
+		docpad.log('info', 'Starting the server...')
 		this.server = http.createServer(function (request, response) {
-			handler(request, response, serveOptions)
+			// it is here, as on tracis, out path is false if done earlier
+			const outPath = docpad.getPath('out')
+			const serveOptions = {
+				public: outPath,
+				...config.serveOptions,
+			}
+			docpad.log('debug', 'request:', request.url, serveOptions)
+			return handler(request, response, serveOptions)
 		})
-		this.server.on('error', this.serverError)
-		this.server.on('clientError', this.serverClientError)
-		this.server.listen(listenOptions, () => {
+		this.server.on('error', this.docpad.error)
+		this.server.on('clientError', this.docpad.warn)
+
+		// get the port and hostname
+		opts = {
+			port: docpadConfig.port || hostenv.PORT || 9778,
+			host:
+				docpadConfig.host || docpadConfig.hostname || hostenv.HOSTNAME || null,
+			...config.listenOptions,
+			...opts,
+		}
+
+		// start listening on the server
+		this.server.listen(opts, () => {
+			// fetch
 			const { port, address } = this.server.address()
 			const host = address === '::' ? '0.0.0.0' : address
-			this.docpad.log('info', `...server started on http://${host}:${port}`)
+			// apply
+			me.port = port
+			me.address = address
+			me.host = host
+			me.url = `http://${host}:${port}`
+			// log
+			this.docpad.log('info', `...server started on ${me.url}`)
 			next()
 		})
-
-		return this
 	}
 
-	destroyServer(next) {
+	// Destroy the server
+	docpadDestroy(opts, next) {
+		this.destroyServer(opts, next)
+	}
+	destroyServer(opts, next) {
+		const me = this
 		if (this.server) {
 			this.docpad.log('info', 'Shutting down the server...')
-			this.server.removeListener('error', this.serverError)
-			this.server.removeListener('clientError', this.serverClientError)
 			this.server.close((...args) => {
+				// remove
+				this.server.removeAllListeners()
+
+				// reset
+				me.server = me.url = me.host = me.address = me.port = false
+
+				// log
 				this.docpad.log('info', '...shutdown down the server')
 				next(...args)
 			})
-			this.server = null
 		} else {
 			next()
 		}
-
-		return this
-	}
-
-	docpadDestroy(opts, next) {
-		this.destroyServer(next)
-		return this
 	}
 }
 
