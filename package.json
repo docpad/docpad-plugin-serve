@@ -86,7 +86,7 @@
   "main": "source/index.js",
   "dependencies": {
     "docpad-baseplugin": "^1.4.0",
-    "hostenv": "^3.13.0",
+    "hostenv": "^4.3.0",
     "serve-handler": "^6.1.3"
   },
   "devDependencies": {
